@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamera Kontrol Paneli</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Giriş Ekranı -->
+    <div id="login-container" class="container">
+        <h2>Sisteme Giriş</h2>
+        <input type="email" id="email" placeholder="E-posta" required>
+        <input type="password" id="password" placeholder="Şifre" required>
+        <button id="login-btn">Giriş Yap</button>
+        <p id="error-message" style="color: red; display: none;"></p>
+    </div>
+
+    <!-- Kontrol Paneli (Giriş yapana kadar gizli) -->
+    <div id="dashboard-container" class="container" style="display: none;">
+        <h2>Kamera Kontrol Paneli</h2>
+        <p>Hoş geldin! Sistem aktif.</p>
+        
+        <button id="capture-btn">📸 Anlık Fotoğraf Çek</button>
+        <button id="logout-btn" style="background-color: #d9534f;">Çıkış Yap</button>
+        
+        <div id="image-gallery">
+            <!-- Çekilen fotoğraflar buraya gelecek -->
+        </div>
+    </div>
+
+    <!-- Firebase işlemleri için JS dosyamız -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
