@@ -1,6 +1,7 @@
 // Firebase kütüphanelerini içe aktar
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBR2RemyP_Y4OUtmEPprKG_mJp9UhfVngw",
@@ -14,6 +15,30 @@ const firebaseConfig = {
 // Firebase'i başlat
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Veritabanı referansını al
+const db = getDatabase(app);
+const captureBtn = document.getElementById('capture-btn');
+
+// Anlık Fotoğraf Çek butonuna tıklandığında çalışacak kod
+captureBtn.addEventListener('click', () => {
+    // Veritabanında "kamera_komutlari/anlik_durum" adında bir yol oluşturuyoruz
+    const commandRef = ref(db, 'kamera_komutlari/anlik_durum');
+    
+    // O yola veriyi yazıyoruz
+    set(commandRef, {
+        fotograf_cek: true,
+        zaman_damgasi: Date.now() // Aynı butona art arda basıldığında verinin değiştiğini algılamak için
+    })
+    .then(() => {
+        // Geçici bir geri bildirim, ileride burayı "Fotoğraf çekiliyor..." yazısı ile değiştirebiliriz
+        alert("Sinyal gönderildi! Telefon fotoğraf çekiyor...");
+    })
+    .catch((error) => {
+        console.error("Sinyal gönderilemedi: ", error);
+        alert("Hata oluştu: " + error.message);
+    });
+});
 
 // HTML Elementlerini Seç
 const loginContainer = document.getElementById('login-container');
