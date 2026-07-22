@@ -7,13 +7,11 @@ import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.
 const firebaseConfig = {
   apiKey: "AIzaSyBR2RemyP_Y4OUtmEPprKG_mJp9UhfVngw",
   authDomain: "esgumus-792d1.firebaseapp.com",
+  databaseURL: "https://esgumus-792d1-default-rtdb.europe-west1.firebasedatabase.app", // EKLENEN YENİ SATIR
   projectId: "esgumus-792d1",
   storageBucket: "esgumus-792d1.firebasestorage.app",
   messagingSenderId: "968322039095",
-  appId: "1:968322039095:web:52181aadb0467d99192eb2",
-  // ÖNEMLİ: Eğer veritabanını Avrupa vb. seçtiysen aşağıdaki URL'i kendi veritabanı linkinle değiştir.
-  // Firebase Realtime Database ekranının en üstünde bu linki görebilirsin.
-  databaseURL: "https://esgumus-792d1-default-rtdb.europe-west1.firebasedatabase.app/" 
+  appId: "1:968322039095:web:52181aadb0467d99192eb2"
 };
 
 // 3. FİREBASE'İ BAŞLAT
