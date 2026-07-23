@@ -1,6 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    background-color: #121212;
+    color: #e0e0e0;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -9,20 +10,26 @@ body {
 }
 
 .container {
-    background: white;
+    background: #1e1e1e;
     padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     text-align: center;
-    width: 300px;
+    width: 320px;
 }
 
 input {
     width: 90%;
     padding: 10px;
     margin: 10px 0;
-    border: 1px solid #ccc;
+    border: 1px solid #333;
+    background-color: #2c2c2c;
+    color: #ffffff;
     border-radius: 4px;
+}
+
+input::placeholder {
+    color: #888;
 }
 
 button {
@@ -34,8 +41,17 @@ button {
     border-radius: 4px;
     cursor: pointer;
     margin-top: 10px;
+    font-weight: bold;
 }
 
 button:hover {
     background-color: #0056b3;
+}
+
+#logout-btn {
+    background-color: #d9534f;
+}
+
+#logout-btn:hover {
+    background-color: #c9302c;
 }
