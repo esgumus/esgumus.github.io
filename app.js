@@ -85,23 +85,28 @@ captureBtn.addEventListener('click', () => {
     });
 });
 
-// 5. TELEFONDAN GELEN FOTOĞRAFI EKRANDA GÖSTERME (YENİ EKLENEN KISIM)
+// 5. TELEFONDAN GELEN FOTOĞRAFI EKRANDA GÖSTERME
 function baslatFotoDinleyici() {
-    // Veritabanında telefonun fotoğrafı kaydedeceği konumu dinliyoruz
     const fotoRef = ref(db, 'kamera_verileri/son_fotograf');
     
     onValue(fotoRef, (snapshot) => {
         const data = snapshot.val();
         
-        // Eğer veri varsa ve içinde base64 formatında resim bulunuyorsa
         if (data && data.base64_resim) {
-            // HTML içindeki div'e resmi bir <img> etiketi olarak basıyoruz
+            // Eğer tespit edilen bir şey yoksa "Temiz" yazsın
+            const tespit = data.tespit_edilen || "Analiz Yok";
+            
+            // Tespit durumuna göre renk belirle (Tehlike = Kırmızı, Temiz = Yeşil)
+            const renk = tespit.includes("Temiz") ? "#4caf50" : "#f44336";
+
             imageGallery.innerHTML = `
-                <h3 style="margin-top: 20px; color: #333;">Son Gelen Görüntü</h3>
-                <img src="${data.base64_resim}" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                <p style="font-size: 13px; color: #666; margin-top: 10px;">
-                    Çekim Zamanı: ${new Date(data.zaman_damgasi).toLocaleTimeString('tr-TR')}
-                </p>
+                <div style="margin-top: 20px; padding: 10px; background: #2c2c2c; border-radius: 8px;">
+                    <h3 style="margin: 0 0 10px 0; color: ${renk};">Sonuç: ${tespit}</h3>
+                    <img src="${data.base64_resim}" style="max-width: 100%; border-radius: 8px;">
+                    <p style="font-size: 13px; color: #aaa; margin: 10px 0 0 0;">
+                        Çekim: ${new Date(data.zaman_damgasi).toLocaleTimeString('tr-TR')}
+                    </p>
+                </div>
             `;
         }
     });
