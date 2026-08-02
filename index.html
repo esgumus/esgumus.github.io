@@ -57,10 +57,18 @@
                         </select>
                     </div>
 
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <label for="hareket-aktif-select">Hareket & Mail Uyarısı:</label>
+                        <select id="hareket-aktif-select" aria-label="Hareket Uyarısı" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
+                            <option value="true">AÇIK (Mail Atar)</option>
+                            <option value="false">KAPALI (Sadece Çeker)</option>
+                        </select>
+                    </div>
+
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <label for="hassasiyet-slider">Hareket Hassasiyeti:</label>
                         <input type="range" id="hassasiyet-slider" aria-label="Hareket Hassasiyeti" min="5" max="50" value="15" style="width: 100px;">
-                        <span id="hassasiyet-deger">%25</span>
+                        <span id="hassasiyet-deger">%15</span>
                     </div>
                 </div>
 
