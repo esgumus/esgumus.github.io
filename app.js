@@ -1,96 +1,226 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Akıllı Güvenlik Paneli</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-</head>
-<body>
-    <div id="login-container" class="container">
-        <h2>Sisteme Giriş</h2>
-        <input type="email" id="email" placeholder="E-posta" autocomplete="username" required>
-        <input type="password" id="password" placeholder="Şifre" autocomplete="current-password" required>
-        <button id="login-btn">Giriş Yap</button>
-        <p id="error-message" style="color: red; display: none;"></p>
-    </div>
+import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt, endAt, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    <div id="dashboard-container" style="display: none;">
-        <div class="main-layout">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin: 0;">Kontrol Paneli</h2>
-                <button id="logout-btn" style="width: auto; padding: 8px 15px;">Çıkış</button>
-            </div>
+// Firebase Config Bilgilerin
+const firebaseConfig = {
+    apiKey: "AIzaSyBR2RemyP_Y4OUtmEPprKG_mJp9UhfVngw",
+    authDomain: "esgumus-792d1.firebaseapp.com",
+    databaseURL: "https://esgumus-792d1-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "esgumus-792d1",
+    storageBucket: "esgumus-792d1.firebasestorage.app",
+    messagingSenderId: "968322039095",
+    appId: "1:968322039095:web:52181aadb0467d99192eb2"
+};
 
-            <div class="tabs">
-                <button id="tab-cam-btn" class="active-tab">📸 Kamera</button>
-                <button id="tab-chat-btn" class="inactive-tab">💬 Sohbet</button>
-            </div>
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-            <!-- Sol Panel: Kamera -->
-            <div id="camera-section" class="container">
-                
-                <!-- CİHAZ AYARLARI KONTROL PANELİ -->
-                <div style="background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="margin-top: 0; color: #4caf50;">⚙️ Cihaz Ayarları</h4>
-                    
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <label>Ön/Arka Kamera:</label>
-                        <select id="kamera-yonu-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
-                            <option value="arka">Arka Kamera</option>
-                            <option value="on">Ön Kamera</option>
-                        </select>
-                    </div>
+// --- E2EE (UÇTAN UCA ŞİFRELEME) AYARLARI ---
+const GIZLI_ANAHTAR = "guvenlik_anahtarim_123!"; 
 
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <label>Oto. Çalışma Modu:</label>
-                        <select id="oto-cekim-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
-                            <option value="0">Sadece Web'den</option>
-                            <option value="1000">1 Saniyede Bir</option>
-                            <option value="2000">2 Saniyede Bir</option>
-                            <option value="5000">5 Saniyede Bir</option>
-                            <option value="10000">10 Saniyede Bir</option>
-                            <option value="30000">30 Saniyede Bir</option>
-                            <option value="60000">1 Dakikada Bir</option>
-                            <option value="300000">5 Dakikada Bir</option>
-                            <option value="900000">15 Dakikada Bir</option>
-                        </select>
-                    </div>
+function sifrele(metin) {
+    return CryptoJS.AES.encrypt(metin, GIZLI_ANAHTAR).toString();
+}
 
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <label>Hareket Hassasiyeti:</label>
-                        <input type="range" id="hassasiyet-slider" min="5" max="50" value="15" style="width: 100px;">
-                        <span id="hassasiyet-deger">%15</span>
-                    </div>
-                </div>
+function sifreCoz(sifreliMetin) {
+    try {
+        const bytes = CryptoJS.AES.decrypt(sifreliMetin, GIZLI_ANAHTAR);
+        const orjinalMetin = bytes.toString(CryptoJS.enc.Utf8);
+        return orjinalMetin || "[Şifresi Çözülemedi]";
+    } catch (e) {
+        return sifreliMetin; // Şifreli değilse (sistem mesajıysa) olduğu gibi göster
+    }
+}
+// -------------------------------------------
 
-                <button id="capture-btn">📸 Manuel Fotoğraf Çek</button>
-                
-                <div id="image-gallery">
-                    <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
-                    <img id="main-image" src="" style="display: none; width: 100%; border-radius: 8px; margin-top: 15px;">
-                    <p id="foto-zaman" style="color: #888; font-size: 12px;"></p>
-                </div>
+let aktifKullaniciAdi = "Kullanıcı";
+let fotoGecmisi = [];
+let otoCekimTimer = null; // Web'den göndereceğimiz zamanlayıcı
 
-                <div class="slider-container" style="margin-top: 20px;">
-                    <p>Geçmiş Fotoğraflar (Son 30)</p>
-                    <input type="range" id="history-slider" min="0" max="0" value="0" style="width: 100%;">
-                </div>
-            </div>
+// HTML Elementleri
+const loginContainer = document.getElementById('login-container');
+const dashboardContainer = document.getElementById('dashboard-container');
+const mainImage = document.getElementById('main-image');
+const fotoDurum = document.getElementById('foto-durum');
+const fotoZaman = document.getElementById('foto-zaman');
+const historySlider = document.getElementById('history-slider');
+const chatBox = document.getElementById('chat-box');
+const chatInput = document.getElementById('chat-input');
 
-            <!-- Sağ Panel: Chat -->
-            <div id="chat-section" class="container" style="display: none;">
-                <h3 style="margin-top: 0;">Olay Günlüğü <span style="font-size:10px; color:#4caf50;">🔒 E2EE Şifreli</span></h3>
-                <div id="chat-box" class="chat-box"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Mesaj yaz...">
-                    <button id="send-chat-btn">Gönder</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script type="module" src="app.js"></script>
-</body>
-</html>
+// Sekme Elementleri
+const tabCamBtn = document.getElementById('tab-cam-btn');
+const tabChatBtn = document.getElementById('tab-chat-btn');
+const cameraSection = document.getElementById('camera-section');
+const chatSection = document.getElementById('chat-section');
+
+// Ayar Elementleri
+const kameraYonuSelect = document.getElementById('kamera-yonu-select');
+const otoCekimSelect = document.getElementById('oto-cekim-select');
+const hassasiyetSlider = document.getElementById('hassasiyet-slider');
+const hassasiyetDeger = document.getElementById('hassasiyet-deger');
+
+// --- SEKME DEĞİŞTİRME MANTIĞI ---
+tabCamBtn.addEventListener('click', () => {
+    cameraSection.style.display = 'flex';
+    chatSection.style.display = 'none';
+    tabCamBtn.className = 'active-tab';
+    tabChatBtn.className = 'inactive-tab';
+});
+
+tabChatBtn.addEventListener('click', () => {
+    cameraSection.style.display = 'none';
+    chatSection.style.display = 'flex';
+    tabChatBtn.className = 'active-tab';
+    tabCamBtn.className = 'inactive-tab';
+    chatBox.scrollTop = chatBox.scrollHeight; 
+});
+
+// --- GİRİŞ İŞLEMLERİ ---
+document.getElementById('login-btn').addEventListener('click', () => {
+    signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+        .catch(err => alert("Giriş hatası: " + err.message));
+});
+
+document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        aktifKullaniciAdi = user.email.split('@')[0];
+        loginContainer.style.display = 'none';
+        dashboardContainer.style.display = 'block';
+        baslatDinleyiciler();
+    } else {
+        dashboardContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+    }
+});
+
+// --- AYARLARI FIREBASE'E GÖNDERME İŞLEMLERİ ---
+function ayarlariGuncelle() {
+    set(ref(db, 'kamera_komutlari/ayarlar'), {
+        arka_kamera_mi: kameraYonuSelect.value === 'arka',
+        hassasiyet: parseInt(hassasiyetSlider.value)
+    });
+}
+
+kameraYonuSelect.addEventListener('change', ayarlariGuncelle);
+
+hassasiyetSlider.addEventListener('input', (e) => {
+    hassasiyetDeger.innerText = `%${e.target.value}`;
+});
+hassasiyetSlider.addEventListener('change', ayarlariGuncelle);
+
+// --- WEB ZAMANLAYICISI (Telefona "Uyan" Emri Gönderen Kısım) ---
+otoCekimSelect.addEventListener('change', (e) => {
+    const sureMs = parseInt(e.target.value);
+    
+    // Eski zamanlayıcıyı iptal et
+    if (otoCekimTimer) clearInterval(otoCekimTimer);
+    
+    if (sureMs > 0) {
+        // Eğer 60.000 ms (1 dk) altındaysa saniye olarak, üstündeyse dakika olarak yazsın
+        const mesaj = sureMs >= 60000 
+            ? `Otomatik takip aktif (${sureMs/60000} dk)` 
+            : `Otomatik takip aktif (${sureMs/1000} sn)`;
+            
+        gonderMesaj("Sistem", mesaj, false);
+        
+        // Belirtilen sürede bir firebase'e komut yaz (Telefon bu emri dinliyor)
+        otoCekimTimer = setInterval(() => {
+            set(ref(db, 'kamera_komutlari/anlik_durum'), { fotograf_cek: true, otomatik_mi: true, zaman: Date.now() });
+        }, sureMs);
+    } else {
+        gonderMesaj("Sistem", "Otomatik takip kapatıldı (Sadece Web modu).", false);
+    }
+});
+
+// --- MANUEL TETİKLEME ---
+document.getElementById('capture-btn').addEventListener('click', () => {
+    set(ref(db, 'kamera_komutlari/anlik_durum'), { fotograf_cek: true, otomatik_mi: false, zaman: Date.now() });
+    gonderMesaj("Sistem", "Kameraya fotoğraf çekme emri gönderildi.", false); 
+});
+
+// --- VERİ DİNLEME VE CHAT İŞLEMLERİ ---
+function baslatDinleyiciler() {
+    // Fotoğraf Geçmişi (Son 30 fotoğraf)
+    const fotoRef = query(ref(db, 'kamera_verileri/fotograflar'), limitToLast(30));
+    onValue(fotoRef, (snapshot) => {
+        fotoGecmisi = [];
+        snapshot.forEach(child => { fotoGecmisi.push(child.val()); });
+        
+        if (fotoGecmisi.length > 0) {
+            historySlider.max = fotoGecmisi.length - 1;
+            historySlider.value = fotoGecmisi.length - 1; 
+            gorseliGuncelle(fotoGecmisi[fotoGecmisi.length - 1]);
+        }
+    });
+
+    // Chat Sistemi (Son 30 Dakika)
+    const otuzDkAralik = Date.now() - (30 * 60 * 1000);
+    const chatRef = query(ref(db, 'chat_messages'), orderByChild('timestamp'), startAt(otuzDkAralik));
+    
+    onValue(chatRef, (snapshot) => {
+        chatBox.innerHTML = '';
+        snapshot.forEach(child => {
+            const data = child.val();
+            const div = document.createElement('div');
+            const saat = new Date(data.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            const gosterilecekMetin = data.sender === 'Sistem' ? data.text : sifreCoz(data.text);
+            
+            div.className = `chat-message ${data.sender === 'Sistem' ? 'msg-system' : 'msg-user'}`;
+            div.innerHTML = `<strong>${data.sender}</strong><br>${gosterilecekMetin} <div class="msg-time">${saat}</div>`;
+            chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+historySlider.addEventListener('input', (e) => {
+    if (fotoGecmisi[e.target.value]) gorseliGuncelle(fotoGecmisi[e.target.value]);
+});
+
+function gorseliGuncelle(data) {
+    mainImage.style.display = 'block';
+    fotoDurum.style.display = 'none';
+    mainImage.src = data.base64_resim;
+    fotoZaman.innerText = "Çekim: " + new Date(data.zaman_damgasi).toLocaleString('tr-TR');
+}
+
+document.getElementById('send-chat-btn').addEventListener('click', () => {
+    if(chatInput.value.trim() !== "") {
+        gonderMesaj(aktifKullaniciAdi, chatInput.value, true);
+        chatInput.value = '';
+    }
+});
+
+function gonderMesaj(gonderici, metin, sifrelensinMi = true) {
+    const sonMetin = sifrelensinMi ? sifrele(metin) : metin;
+    push(ref(db, 'chat_messages'), { sender: gonderici, text: sonMetin, timestamp: Date.now() });
+}
+
+// --- OTOMATİK VERİ TEMİZLİĞİ (30 DK'DAN ESKİLERİ SİL) ---
+function eskiMesajlariTemizle() {
+    const otuzDkOncesi = Date.now() - (30 * 60 * 1000);
+    
+    const eskiMesajlarSorgusu = query(ref(db, 'chat_messages'), orderByChild('timestamp'), endAt(otuzDkOncesi));
+    
+    get(eskiMesajlarSorgusu).then((snapshot) => {
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                remove(ref(db, `chat_messages/${child.key}`));
+            });
+            console.log("Eski mesajlar temizlendi.");
+        }
+    }).catch(error => {
+        console.error("Temizlik sırasında hata:", error);
+    });
+}
+
+// Site açıldığında bir kere temizle
+eskiMesajlariTemizle();
+
+// Ardından her 60 saniyede bir arka planda temizlik yapmaya devam et
+setInterval(eskiMesajlariTemizle, 60000);
