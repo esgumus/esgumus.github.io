@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kamera Kontrol Paneli</title>
+    <title>Güvenlik Paneli</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- Giriş Ekranı -->
     <div id="login-container" class="container">
         <h2>Sisteme Giriş</h2>
         <input type="email" id="email" placeholder="E-posta" required>
@@ -17,20 +15,41 @@
         <p id="error-message" style="color: red; display: none;"></p>
     </div>
 
-    <!-- Kontrol Paneli (Giriş yapana kadar gizli) -->
-    <div id="dashboard-container" class="container" style="display: none;">
-        <h2>Kamera Kontrol Paneli</h2>
-        <p>Hoş geldin! Sistem aktif.</p>
-        
-        <button id="capture-btn">📸 Anlık Fotoğraf Çek</button>
-        <button id="logout-btn" style="background-color: #d9534f;">Çıkış Yap</button>
-        
-        <div id="image-gallery">
-            <!-- Çekilen fotoğraflar buraya gelecek -->
+    <div id="dashboard-container" style="display: none;">
+        <div class="main-layout">
+            <!-- Sol Panel: Kamera ve Tarihçe -->
+            <div class="camera-section container">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Kamera Paneli</h2>
+                    <button id="logout-btn" style="width: auto; padding: 5px 15px;">Çıkış</button>
+                </div>
+                
+                <button id="capture-btn">Anlık Fotoğraf Çek</button>
+                
+                <div id="image-gallery">
+                    <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
+                    <img id="main-image" src="" style="display: none; width: 100%; border-radius: 8px;">
+                    <p id="foto-zaman" style="color: #888; font-size: 12px;"></p>
+                </div>
+
+                <div class="slider-container">
+                    <p>Geçmiş Fotoğraflar (Son 30)</p>
+                    <input type="range" id="history-slider" min="0" max="0" value="0" style="width: 100%;">
+                </div>
+            </div>
+
+            <!-- Sağ Panel: WhatsApp Tarzı Chat -->
+            <div class="chat-section container">
+                <h2>Sohbet (Son 10 Dk)</h2>
+                <div id="chat-box" class="chat-box"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Mesaj yaz...">
+                    <button id="send-chat-btn">Gönder</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Firebase işlemleri için JS dosyamız -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
