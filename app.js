@@ -1,3 +1,4 @@
+import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt, endAt, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -159,3 +160,29 @@ function gonderMesaj(gonderici, metin, sifrelensinMi = true) {
     const sonMetin = sifrelensinMi ? sifrele(metin) : metin;
     push(ref(db, 'chat_messages'), { sender: gonderici, text: sonMetin, timestamp: Date.now() });
 }
+
+// --- OTOMATİK VERİ TEMİZLİĞİ (30 DK'DAN ESKİLERİ SİL) ---
+function eskiMesajlariTemizle() {
+    const onDkOncesi = Date.now() - (30 * 60 * 1000);
+    
+    // 10 dakikadan daha eski olan mesajları sorgula
+    const eskiMesajlarSorgusu = query(ref(db, 'chat_messages'), orderByChild('timestamp'), endAt(onDkOncesi));
+    
+    get(eskiMesajlarSorgusu).then((snapshot) => {
+        if (snapshot.exists()) {
+            snapshot.forEach(child => {
+                // Bulunan eski mesajı veritabanından kalıcı olarak sil
+                remove(ref(db, `chat_messages/${child.key}`));
+            });
+            console.log("Eski mesajlar temizlendi.");
+        }
+    }).catch(error => {
+        console.error("Temizlik sırasında hata:", error);
+    });
+}
+
+// Site açıldığında bir kere temizle
+eskiMesajlariTemizle();
+
+// Ardından her 60 saniyede bir arka planda temizlik yapmaya devam et
+setInterval(eskiMesajlariTemizle, 60000);
