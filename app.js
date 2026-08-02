@@ -47,6 +47,7 @@ const chatSection = document.getElementById('chat-section');
 
 const kameraYonuSelect = document.getElementById('kamera-yonu-select');
 const otoCekimSelect = document.getElementById('oto-cekim-select');
+const hareketAktifSelect = document.getElementById('hareket-aktif-select');
 const hassasiyetSlider = document.getElementById('hassasiyet-slider');
 const hassasiyetDeger = document.getElementById('hassasiyet-deger');
 
@@ -88,6 +89,7 @@ function ayarlariGuncelle() {
         arka_kamera_mi: kameraYonuSelect.value === 'arka',
         hassasiyet: parseInt(hassasiyetSlider.value),
         oto_cekim_saniye: saniye
+        hareket_aktif: hareketAktifSelect.value === 'true'
     });
 
     if (saniye === 0) gonderMesaj("Sistem", "Otomatik takip kapatıldı.", false);
@@ -96,6 +98,7 @@ function ayarlariGuncelle() {
 
 kameraYonuSelect.addEventListener('change', ayarlariGuncelle);
 otoCekimSelect.addEventListener('change', ayarlariGuncelle);
+hareketAktifSelect.addEventListener('change', ayarlariGuncelle);
 hassasiyetSlider.addEventListener('input', (e) => hassasiyetDeger.innerText = `%${e.target.value}`);
 hassasiyetSlider.addEventListener('change', ayarlariGuncelle);
 
