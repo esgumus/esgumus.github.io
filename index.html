@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Akıllı Güvenlik Paneli</title>
+    <title>Güvenlik Paneli</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -11,8 +11,8 @@
 <body>
     <div id="login-container" class="container">
         <h2>Sisteme Giriş</h2>
-        <input type="email" id="email" placeholder="E-posta" autocomplete="username" required>
-        <input type="password" id="password" placeholder="Şifre" autocomplete="current-password" required>
+        <input type="email" id="email" placeholder="E-posta" aria-label="E-posta" autocomplete="username" required>
+        <input type="password" id="password" placeholder="Şifre" aria-label="Şifre" autocomplete="current-password" required>
         <button id="login-btn">Giriş Yap</button>
         <p id="error-message" style="color: red; display: none;"></p>
     </div>
@@ -20,7 +20,7 @@
     <div id="dashboard-container" style="display: none;">
         <div class="main-layout">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin: 0;">Kontrol Paneli</h2>
+                <h2 style="margin: 0;">Kontrol Paneli <span style="font-size:10px; color:#4caf50;">by @esofiso | 2026</span></h2>
                 <button id="logout-btn" style="width: auto; padding: 8px 15px;">Çıkış</button>
             </div>
 
@@ -29,23 +29,22 @@
                 <button id="tab-chat-btn" class="inactive-tab">💬 Sohbet</button>
             </div>
 
-            <!-- Sol Panel: Kamera -->
+            <!-- KAMERA PANELİ -->
             <div id="camera-section" class="container">
-                
                 <div style="background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="margin-top: 0; color: #4caf50;">⚙️ Cihaz Ayarları</h4>
                     
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                         <label for="kamera-yonu-select">Ön/Arka Kamera:</label>
-                        <select id="kamera-yonu-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
-                            <option value="arka">Arka Kamera</option>
+                        <select id="kamera-yonu-select" aria-label="Kamera Yönü" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
                             <option value="on">Ön Kamera</option>
+                            <option value="arka">Arka Kamera</option>
                         </select>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <label for="oto-cekim-select">Oto. Çalışma Modu:</label>
-                        <select id="oto-cekim-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
+                        <label for="oto-cekim-select">Çalışma Modu:</label>
+                        <select id="oto-cekim-select" aria-label="Çalışma Modu" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
                             <option value="0">Sadece Web'den</option>
                             <option value="1">1 Saniyede Bir</option>
                             <option value="2">2 Saniyede Bir</option>
@@ -60,12 +59,12 @@
 
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <label for="hassasiyet-slider">Hareket Hassasiyeti:</label>
-                        <input type="range" id="hassasiyet-slider" min="5" max="50" value="15" style="width: 100px;">
-                        <span id="hassasiyet-deger">%15</span>
+                        <input type="range" id="hassasiyet-slider" aria-label="Hareket Hassasiyeti" min="5" max="50" value="15" style="width: 100px;">
+                        <span id="hassasiyet-deger">%25</span>
                     </div>
                 </div>
 
-                <button id="capture-btn">📸 Manuel Fotoğraf Çek</button>
+                <button id="capture-btn">Anlık Fotoğraf Çek</button>
                 
                 <div id="image-gallery">
                     <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
@@ -75,16 +74,16 @@
 
                 <div class="slider-container" style="margin-top: 20px;">
                     <p>Geçmiş Fotoğraflar (Son 30)</p>
-                    <input type="range" id="history-slider" min="0" max="0" value="0" style="width: 100%;">
+                    <input type="range" id="history-slider" aria-label="Geçmiş Slider" min="0" max="0" value="0" style="width: 100%;">
                 </div>
             </div>
 
-            <!-- Sağ Panel: Chat -->
+            <!-- CHAT PANELİ -->
             <div id="chat-section" class="container" style="display: none;">
-                <h3 style="margin-top: 0;">Olay Günlüğü <span style="font-size:10px; color:#4caf50;">🔒 E2EE Şifreli</span></h3>
+                <h3 style="margin-top: 0;">Sohbet <span style="font-size:10px; color:#4caf50;">uçtan-uca şifreli</span></h3>
                 <div id="chat-box" class="chat-box"></div>
                 <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="Mesaj yaz...">
+                    <input type="text" id="chat-input" placeholder="Mesaj yaz..." aria-label="Mesaj Kutusu">
                     <button id="send-chat-btn">Gönder</button>
                 </div>
             </div>
