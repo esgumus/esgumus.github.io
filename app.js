@@ -1,7 +1,6 @@
-// Firebase kütüphanelerini içe aktar
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // Firebase Config Bilgilerin
 const firebaseConfig = {
@@ -14,100 +13,99 @@ const firebaseConfig = {
   appId: "1:968322039095:web:52181aadb0467d99192eb2"
 };
 
-// Firebase'i başlat
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// HTML Elementlerini Seç
+// HTML Elementleri
 const loginContainer = document.getElementById('login-container');
 const dashboardContainer = document.getElementById('dashboard-container');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginBtn = document.getElementById('login-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const errorMessage = document.getElementById('error-message');
-const captureBtn = document.getElementById('capture-btn');
-const imageGallery = document.getElementById('image-gallery');
+const mainImage = document.getElementById('main-image');
+const fotoDurum = document.getElementById('foto-durum');
+const fotoZaman = document.getElementById('foto-zaman');
+const historySlider = document.getElementById('history-slider');
+const chatBox = document.getElementById('chat-box');
+const chatInput = document.getElementById('chat-input');
 
-// 1. GİRİŞ YAPMA İŞLEMİ
-loginBtn.addEventListener('click', () => {
-    const email = emailInput.value;
-    const password = passwordInput.value;
+let fotoGecmisi = [];
 
-    signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-            errorMessage.style.display = 'none';
-        })
-        .catch((error) => {
-            errorMessage.innerText = "Giriş başarısız: " + error.message;
-            errorMessage.style.display = 'block';
-        });
+document.getElementById('login-btn').addEventListener('click', () => {
+    signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+        .catch(err => alert("Giriş hatası: " + err.message));
 });
 
-// 2. ÇIKIŞ YAPMA İŞLEMİ
-logoutBtn.addEventListener('click', () => {
-    signOut(auth);
-});
+document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-// 3. KULLANICI DURUMUNU DİNLEME
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Kullanıcı giriş yaptıysa paneli göster
         loginContainer.style.display = 'none';
         dashboardContainer.style.display = 'block';
-        
-        // Giriş yapıldığı an veritabanındaki fotoğrafları dinlemeye başla
-        baslatFotoDinleyici();
+        baslatDinleyiciler();
     } else {
-        // Çıkış yapıldıysa giriş ekranına dön
         dashboardContainer.style.display = 'none';
         loginContainer.style.display = 'block';
-        emailInput.value = '';
-        passwordInput.value = '';
     }
 });
 
-// 4. TELEFONA FOTOĞRAF ÇEK SİNYALİ GÖNDERME
-captureBtn.addEventListener('click', () => {
-    const commandRef = ref(db, 'kamera_komutlari/anlik_durum');
-    
-    set(commandRef, {
-        fotograf_cek: true,
-        zaman_damgasi: Date.now()
-    })
-    .then(() => {
-        alert("Sinyal gönderildi! Telefondan fotoğraf bekleniyor...");
-    })
-    .catch((error) => {
-        console.error("Sinyal gönderilemedi: ", error);
-        alert("Hata oluştu: " + error.message);
-    });
+// KAMERAYI UZAKTAN TETİKLE
+document.getElementById('capture-btn').addEventListener('click', () => {
+    set(ref(db, 'kamera_komutlari/anlik_durum'), { fotograf_cek: true, zaman: Date.now() });
+    gonderMesaj("Sistem", "Kameraya fotoğraf çekme emri gönderildi.");
 });
 
-// 5. TELEFONDAN GELEN FOTOĞRAFI EKRANDA GÖSTERME
-function baslatFotoDinleyici() {
-    const fotoRef = ref(db, 'kamera_verileri/son_fotograf');
-    
+function baslatDinleyiciler() {
+    // 1. FOTOĞRAF GEÇMİŞİNİ DİNLE (Son 30 fotoğraf)
+    const fotoRef = query(ref(db, 'kamera_verileri/fotograflar'), limitToLast(30));
     onValue(fotoRef, (snapshot) => {
-        const data = snapshot.val();
+        fotoGecmisi = [];
+        snapshot.forEach(child => { fotoGecmisi.push(child.val()); });
         
-        if (data && data.base64_resim) {
-            // Eğer tespit edilen bir şey yoksa "Temiz" yazsın
-            const tespit = data.tespit_edilen || "Analiz Yok";
-            
-            // Tespit durumuna göre renk belirle (Tehlike = Kırmızı, Temiz = Yeşil)
-            const renk = tespit.includes("Temiz") ? "#4caf50" : "#f44336";
-
-            imageGallery.innerHTML = `
-                <div style="margin-top: 20px; padding: 10px; background: #2c2c2c; border-radius: 8px;">
-                    <h3 style="margin: 0 0 10px 0; color: ${renk};">Sonuç: ${tespit}</h3>
-                    <img src="${data.base64_resim}" style="max-width: 100%; border-radius: 8px;">
-                    <p style="font-size: 13px; color: #aaa; margin: 10px 0 0 0;">
-                        Çekim: ${new Date(data.zaman_damgasi).toLocaleTimeString('tr-TR')}
-                    </p>
-                </div>
-            `;
+        if (fotoGecmisi.length > 0) {
+            historySlider.max = fotoGecmisi.length - 1;
+            historySlider.value = fotoGecmisi.length - 1; // En güncele al
+            gorseliGuncelle(fotoGecmisi[fotoGecmisi.length - 1]);
         }
     });
+
+    // 2. CHAT SİSTEMİNİ DİNLE (Son 10 Dakika)
+    const onDkAralik = Date.now() - (10 * 60 * 1000);
+    const chatRef = query(ref(db, 'chat_messages'), orderByChild('timestamp'), startAt(onDkAralik));
+    
+    onValue(chatRef, (snapshot) => {
+        chatBox.innerHTML = '';
+        snapshot.forEach(child => {
+            const data = child.val();
+            const div = document.createElement('div');
+            const saat = new Date(data.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            div.className = `chat-message ${data.sender === 'Sistem' ? 'msg-system' : 'msg-user'}`;
+            div.innerHTML = `<strong>${data.sender}</strong><br>${data.text} <div class="msg-time">${saat}</div>`;
+            chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+}
+
+// SLIDER DEĞİŞTİĞİNDE
+historySlider.addEventListener('input', (e) => {
+    if (fotoGecmisi[e.target.value]) gorseliGuncelle(fotoGecmisi[e.target.value]);
+});
+
+function gorseliGuncelle(data) {
+    mainImage.style.display = 'block';
+    fotoDurum.style.display = 'none';
+    mainImage.src = data.base64_resim;
+    fotoZaman.innerText = "Çekim: " + new Date(data.zaman_damgasi).toLocaleString('tr-TR');
+}
+
+// CHAT MESAJI GÖNDERME
+document.getElementById('send-chat-btn').addEventListener('click', () => {
+    if(chatInput.value.trim() !== "") {
+        gonderMesaj("Kullanıcı", chatInput.value);
+        chatInput.value = '';
+    }
+});
+
+function gonderMesaj(gonderici, metin) {
+    push(ref(db, 'chat_messages'), { sender: gonderici, text: metin, timestamp: Date.now() });
 }
