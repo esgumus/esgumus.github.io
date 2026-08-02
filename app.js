@@ -1,7 +1,6 @@
 import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt, endAt, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getDatabase, ref, set, onValue, query, limitToLast, push, orderByChild, startAt } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // Firebase Config Bilgilerin
 const firebaseConfig = {
@@ -19,8 +18,7 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 
 // --- E2EE (UÇTAN UCA ŞİFRELEME) AYARLARI ---
-// Bu anahtar tarayıcıda kalır, Firebase'e asla gitmez. 
-const GIZLI_ANAHTAR = "benim_ozel_guvenlik_anahtarim_123!"; 
+const GIZLI_ANAHTAR = "guvenlik_anahtarim_123!"; 
 
 function sifrele(metin) {
     return CryptoJS.AES.encrypt(metin, GIZLI_ANAHTAR).toString();
