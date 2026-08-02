@@ -2,11 +2,14 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Güvenlik Paneli</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Uçtan uca şifreleme için AES kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
+    <!-- Giriş Ekranı -->
     <div id="login-container" class="container">
         <h2>Sisteme Giriş</h2>
         <input type="email" id="email" placeholder="E-posta" required>
@@ -15,32 +18,40 @@
         <p id="error-message" style="color: red; display: none;"></p>
     </div>
 
+    <!-- Ana Panel -->
     <div id="dashboard-container" style="display: none;">
         <div class="main-layout">
-            <!-- Sol Panel: Kamera ve Tarihçe -->
-            <div class="camera-section container">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Kamera Paneli</h2>
-                    <button id="logout-btn" style="width: auto; padding: 5px 15px;">Çıkış</button>
-                </div>
-                
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0;">Kontrol Paneli</h2>
+                <button id="logout-btn" style="width: auto; padding: 8px 15px;">Çıkış</button>
+            </div>
+
+            <!-- Sekmeler -->
+            <div class="tabs">
+                <button id="tab-cam-btn" class="active-tab">📸 Kamera</button>
+                <button id="tab-chat-btn" class="inactive-tab">💬 Sohbet</button>
+            </div>
+
+            <!-- Sol Panel: Kamera (Varsayılan Açık) -->
+            <div id="camera-section" class="container">
                 <button id="capture-btn">Anlık Fotoğraf Çek</button>
                 
                 <div id="image-gallery">
                     <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
-                    <img id="main-image" src="" style="display: none; width: 100%; border-radius: 8px;">
+                    <img id="main-image" src="" style="display: none; width: 100%; border-radius: 8px; margin-top: 15px;">
                     <p id="foto-zaman" style="color: #888; font-size: 12px;"></p>
                 </div>
 
-                <div class="slider-container">
+                <div class="slider-container" style="margin-top: 20px;">
                     <p>Geçmiş Fotoğraflar (Son 30)</p>
                     <input type="range" id="history-slider" min="0" max="0" value="0" style="width: 100%;">
                 </div>
             </div>
 
-            <!-- Sağ Panel: WhatsApp Tarzı Chat -->
-            <div class="chat-section container">
-                <h2>Sohbet (Son 10 Dk)</h2>
+            <!-- Sağ Panel: Chat (Başlangıçta Gizli) -->
+            <div id="chat-section" class="container" style="display: none;">
+                <h3 style="margin-top: 0;">Sohbet <span style="font-size:10px; color:#4caf50;">uçtan-uca şifreli</span></h3>
                 <div id="chat-box" class="chat-box"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chat-input" placeholder="Mesaj yaz...">
