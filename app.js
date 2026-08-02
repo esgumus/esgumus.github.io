@@ -88,7 +88,7 @@ function ayarlariGuncelle() {
     set(ref(db, 'kamera_komutlari/ayarlar'), {
         arka_kamera_mi: kameraYonuSelect.value === 'arka',
         hassasiyet: parseInt(hassasiyetSlider.value),
-        oto_cekim_saniye: saniye
+        oto_cekim_saniye: saniye,
         hareket_aktif: hareketAktifSelect.value === 'true'
     });
 
