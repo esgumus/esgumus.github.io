@@ -18,26 +18,52 @@
         <button id="login-btn">Giriş Yap</button>
         <p id="error-message" style="color: red; display: none;"></p>
     </div>
-
-    <!-- Ana Panel -->
+    
     <div id="dashboard-container" style="display: none;">
         <div class="main-layout">
-            
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                           
-                <h2 style="margin: 0;">Kontrol Paneli <span style="font-size:10px; color:#4caf50;">by @esofiso • 2026</span></h3>
+                <h2 style="margin: 0;">Kontrol Paneli</h2>
                 <button id="logout-btn" style="width: auto; padding: 8px 15px;">Çıkış</button>
             </div>
 
-            <!-- Sekmeler -->
             <div class="tabs">
                 <button id="tab-cam-btn" class="active-tab">📸 Kamera</button>
                 <button id="tab-chat-btn" class="inactive-tab">💬 Sohbet</button>
             </div>
 
-            <!-- Sol Panel: Kamera (Varsayılan Açık) -->
+            <!-- Sol Panel: Kamera -->
             <div id="camera-section" class="container">
-                <button id="capture-btn">Anlık Fotoğraf Çek</button>
+                
+                <!-- YENİ: CİHAZ AYARLARI KONTROL PANELİ -->
+                <div style="background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; color: #4caf50;">⚙️ Cihaz Ayarları</h4>
+                    
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <label>Ön/Arka Kamera:</label>
+                        <select id="kamera-yonu-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
+                            <option value="arka">Arka Kamera</option>
+                            <option value="on">Ön Kamera</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <label>Oto. Çalışma (Uyku Modlu):</label>
+                        <select id="oto-cekim-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
+                            <option value="0">Sadece Butonla</option>
+                            <option value="15000">15 Saniyede Bir</option>
+                            <option value="30000">30 Saniyede Bir</option>
+                            <option value="60000">1 Dakikada Bir</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label>Hareket Hassasiyeti:</label>
+                        <input type="range" id="hassasiyet-slider" min="5" max="50" value="15" style="width: 100px;">
+                        <span id="hassasiyet-deger">%15</span>
+                    </div>
+                </div>
+
+                <button id="capture-btn">📸 Manuel Fotoğraf Çek</button>
                 
                 <div id="image-gallery">
                     <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
@@ -51,18 +77,17 @@
                 </div>
             </div>
 
-            <!-- Sağ Panel: Chat (Başlangıçta Gizli) -->
+            <!-- Sağ Panel: Chat -->
             <div id="chat-section" class="container" style="display: none;">
-                <h3 style="margin-top: 0;">Sohbet <span style="font-size:10px; color:#4caf50;">uçtan-uca şifreli</span></h3>
+                <h3 style="margin-top: 0;">Olay Günlüğü <span style="font-size:10px; color:#4caf50;">🔒 E2EE Şifreli</span></h3>
                 <div id="chat-box" class="chat-box"></div>
                 <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="buraya yaz...">
+                    <input type="text" id="chat-input" placeholder="Mesaj yaz...">
                     <button id="send-chat-btn">Gönder</button>
                 </div>
             </div>
         </div>
     </div>
-
     <script type="module" src="app.js"></script>
 </body>
 </html>
