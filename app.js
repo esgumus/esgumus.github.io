@@ -17,6 +17,28 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
+// --- E2EE (UÇTAN UCA ŞİFRELEME) AYARLARI ---
+// Bu anahtar tarayıcıda kalır, Firebase'e asla gitmez. 
+const GIZLI_ANAHTAR = "benim_ozel_guvenlik_anahtarim_123!"; 
+
+function sifrele(metin) {
+    return CryptoJS.AES.encrypt(metin, GIZLI_ANAHTAR).toString();
+}
+
+function sifreCoz(sifreliMetin) {
+    try {
+        const bytes = CryptoJS.AES.decrypt(sifreliMetin, GIZLI_ANAHTAR);
+        const orjinalMetin = bytes.toString(CryptoJS.enc.Utf8);
+        return orjinalMetin || "[Şifresi Çözülemedi]";
+    } catch (e) {
+        return sifreliMetin; // Şifreli değilse (sistem mesajıysa) olduğu gibi göster
+    }
+}
+// -------------------------------------------
+
+let aktifKullaniciAdi = "Kullanıcı";
+let fotoGecmisi = [];
+
 // HTML Elementleri
 const loginContainer = document.getElementById('login-container');
 const dashboardContainer = document.getElementById('dashboard-container');
@@ -27,8 +49,29 @@ const historySlider = document.getElementById('history-slider');
 const chatBox = document.getElementById('chat-box');
 const chatInput = document.getElementById('chat-input');
 
-let fotoGecmisi = [];
+// Sekme Elementleri
+const tabCamBtn = document.getElementById('tab-cam-btn');
+const tabChatBtn = document.getElementById('tab-chat-btn');
+const cameraSection = document.getElementById('camera-section');
+const chatSection = document.getElementById('chat-section');
 
+// SEKME DEĞİŞTİRME MANTIĞI
+tabCamBtn.addEventListener('click', () => {
+    cameraSection.style.display = 'flex';
+    chatSection.style.display = 'none';
+    tabCamBtn.className = 'active-tab';
+    tabChatBtn.className = 'inactive-tab';
+});
+
+tabChatBtn.addEventListener('click', () => {
+    cameraSection.style.display = 'none';
+    chatSection.style.display = 'flex';
+    tabChatBtn.className = 'active-tab';
+    tabCamBtn.className = 'inactive-tab';
+    chatBox.scrollTop = chatBox.scrollHeight; // Chate geçince en alta kaydır
+});
+
+// GİRİŞ İŞLEMLERİ
 document.getElementById('login-btn').addEventListener('click', () => {
     signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
         .catch(err => alert("Giriş hatası: " + err.message));
@@ -38,6 +81,9 @@ document.getElementById('logout-btn').addEventListener('click', () => signOut(au
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        // Mailin @ işaretinden önceki kısmını kullanıcı adı yap
+        aktifKullaniciAdi = user.email.split('@')[0];
+        
         loginContainer.style.display = 'none';
         dashboardContainer.style.display = 'block';
         baslatDinleyiciler();
@@ -50,7 +96,7 @@ onAuthStateChanged(auth, (user) => {
 // KAMERAYI UZAKTAN TETİKLE
 document.getElementById('capture-btn').addEventListener('click', () => {
     set(ref(db, 'kamera_komutlari/anlik_durum'), { fotograf_cek: true, zaman: Date.now() });
-    gonderMesaj("Sistem", "Kameraya fotoğraf çekme emri gönderildi.");
+    gonderMesaj("Sistem", "Kameraya fotoğraf çekme emri gönderildi.", false); // Sistem mesajları şifrelenmez
 });
 
 function baslatDinleyiciler() {
@@ -62,7 +108,7 @@ function baslatDinleyiciler() {
         
         if (fotoGecmisi.length > 0) {
             historySlider.max = fotoGecmisi.length - 1;
-            historySlider.value = fotoGecmisi.length - 1; // En güncele al
+            historySlider.value = fotoGecmisi.length - 1; 
             gorseliGuncelle(fotoGecmisi[fotoGecmisi.length - 1]);
         }
     });
@@ -78,15 +124,17 @@ function baslatDinleyiciler() {
             const div = document.createElement('div');
             const saat = new Date(data.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
             
+            // Eğer mesaj Sistem'dense normal oku, kullanıcıdansa şifreyi çöz!
+            const gosterilecekMetin = data.sender === 'Sistem' ? data.text : sifreCoz(data.text);
+            
             div.className = `chat-message ${data.sender === 'Sistem' ? 'msg-system' : 'msg-user'}`;
-            div.innerHTML = `<strong>${data.sender}</strong><br>${data.text} <div class="msg-time">${saat}</div>`;
+            div.innerHTML = `<strong>${data.sender}</strong><br>${gosterilecekMetin} <div class="msg-time">${saat}</div>`;
             chatBox.appendChild(div);
         });
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
-// SLIDER DEĞİŞTİĞİNDE
 historySlider.addEventListener('input', (e) => {
     if (fotoGecmisi[e.target.value]) gorseliGuncelle(fotoGecmisi[e.target.value]);
 });
@@ -101,11 +149,13 @@ function gorseliGuncelle(data) {
 // CHAT MESAJI GÖNDERME
 document.getElementById('send-chat-btn').addEventListener('click', () => {
     if(chatInput.value.trim() !== "") {
-        gonderMesaj("Kullanıcı", chatInput.value);
+        // Kullanıcının yazdığı mesajı AES ile şifreleyerek veritabanına gönder (true)
+        gonderMesaj(aktifKullaniciAdi, chatInput.value, true);
         chatInput.value = '';
     }
 });
 
-function gonderMesaj(gonderici, metin) {
-    push(ref(db, 'chat_messages'), { sender: gonderici, text: metin, timestamp: Date.now() });
+function gonderMesaj(gonderici, metin, sifrelensinMi = true) {
+    const sonMetin = sifrelensinMi ? sifrele(metin) : metin;
+    push(ref(db, 'chat_messages'), { sender: gonderici, text: sonMetin, timestamp: Date.now() });
 }
