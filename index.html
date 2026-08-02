@@ -18,7 +18,7 @@
         <button id="login-btn">Giriş Yap</button>
         <p id="error-message" style="color: red; display: none;"></p>
     </div>
-    
+
     <div id="dashboard-container" style="display: none;">
         <div class="main-layout">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -34,7 +34,7 @@
             <!-- Sol Panel: Kamera -->
             <div id="camera-section" class="container">
                 
-                <!-- YENİ: CİHAZ AYARLARI KONTROL PANELİ -->
+                <!-- CİHAZ AYARLARI KONTROL PANELİ -->
                 <div style="background: #0d1117; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
                     <h4 style="margin-top: 0; color: #4caf50;">⚙️ Cihaz Ayarları</h4>
                     
@@ -47,12 +47,17 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <label>Oto. Çalışma (Uyku Modlu):</label>
+                        <label>Oto. Çalışma Modu:</label>
                         <select id="oto-cekim-select" style="background: #21262d; color: white; border: 1px solid #30363d; border-radius: 4px;">
-                            <option value="0">Sadece Butonla</option>
-                            <option value="15000">15 Saniyede Bir</option>
+                            <option value="0">Sadece Web'den</option>
+                            <option value="1000">1 Saniyede Bir</option>
+                            <option value="2000">2 Saniyede Bir</option>
+                            <option value="5000">5 Saniyede Bir</option>
+                            <option value="10000">10 Saniyede Bir</option>
                             <option value="30000">30 Saniyede Bir</option>
                             <option value="60000">1 Dakikada Bir</option>
+                            <option value="300000">5 Dakikada Bir</option>
+                            <option value="900000">15 Dakikada Bir</option>
                         </select>
                     </div>
 
@@ -90,4 +95,5 @@
     </div>
     <script type="module" src="app.js"></script>
 </body>
+</html>
 </html>
