@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// --- E2EE (UÇTAN UCA ŞİFRELEME) AYARLARI ---
+// --- UÇTAN UCA ŞİFRELEME ---
 const GIZLI_ANAHTAR = "guvenlik_anahtarim_123!"; 
 
 function sifrele(metin) { return CryptoJS.AES.encrypt(metin, GIZLI_ANAHTAR).toString(); }
@@ -27,7 +27,6 @@ function sifreCoz(sifreliMetin) {
         return bytes.toString(CryptoJS.enc.Utf8) || "[Şifresi Çözülemedi]";
     } catch (e) { return sifreliMetin; }
 }
-// -------------------------------------------
 
 let aktifKullaniciAdi = "Kullanıcı";
 let fotoGecmisi = [];
@@ -81,7 +80,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// --- YENİ MİMARİ: AYARLARI DİREKT TELEFONA YAZ ---
+// TELEFONA AYARLARI GÖNDER
 function ayarlariGuncelle() {
     const saniye = parseInt(otoCekimSelect.value);
     
@@ -91,13 +90,8 @@ function ayarlariGuncelle() {
         oto_cekim_saniye: saniye
     });
 
-    if (saniye === 0) {
-        gonderMesaj("Sistem", "Otomatik takip kapatıldı (Sadece Manuel Mod).", false);
-    } else if (saniye >= 60) {
-        gonderMesaj("Sistem", `Otomatik takip aktif (${saniye/60} dk). Telefon kendi sayacak.`, false);
-    } else {
-        gonderMesaj("Sistem", `Otomatik takip aktif (${saniye} sn). Telefon kendi sayacak.`, false);
-    }
+    if (saniye === 0) gonderMesaj("Sistem", "Otomatik takip kapatıldı.", false);
+    else gonderMesaj("Sistem", `Otomatik takip aktif. Telefon zamanlayıcıyı kurdu.`, false);
 }
 
 kameraYonuSelect.addEventListener('change', ayarlariGuncelle);
@@ -105,14 +99,14 @@ otoCekimSelect.addEventListener('change', ayarlariGuncelle);
 hassasiyetSlider.addEventListener('input', (e) => hassasiyetDeger.innerText = `%${e.target.value}`);
 hassasiyetSlider.addEventListener('change', ayarlariGuncelle);
 
-// MANUEL FOTOĞRAF ÇEK BUTONU
+// MANUEL TETİKLEME
 document.getElementById('capture-btn').addEventListener('click', () => {
     set(ref(db, 'kamera_komutlari/anlik_durum'), { fotograf_cek: true, zaman: Date.now() });
     gonderMesaj("Sistem", "Manuel çekim komutu gönderildi.", false); 
 });
 
-// DİNLEYİCİLER (Fotoğraf ve Chat)
 function baslatDinleyiciler() {
+    // Fotoğrafları Dinle
     const fotoRef = query(ref(db, 'kamera_verileri/fotograflar'), limitToLast(30));
     onValue(fotoRef, (snapshot) => {
         fotoGecmisi = [];
@@ -124,16 +118,16 @@ function baslatDinleyiciler() {
         }
     });
 
+    // Chat Dinle
     const otuzDkAralik = Date.now() - (30 * 60 * 1000);
     const chatRef = query(ref(db, 'chat_messages'), orderByChild('timestamp'), startAt(otuzDkAralik));
-    
     onValue(chatRef, (snapshot) => {
         chatBox.innerHTML = '';
         snapshot.forEach(child => {
             const data = child.val();
-            const div = document.createElement('div');
             const saat = new Date(data.timestamp).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
             const gosterilecekMetin = data.sender === 'Sistem' ? data.text : sifreCoz(data.text);
+            const div = document.createElement('div');
             div.className = `chat-message ${data.sender === 'Sistem' ? 'msg-system' : 'msg-user'}`;
             div.innerHTML = `<strong>${data.sender}</strong><br>${gosterilecekMetin} <div class="msg-time">${saat}</div>`;
             chatBox.appendChild(div);
@@ -165,16 +159,33 @@ function gonderMesaj(gonderici, metin, sifrelensinMi = true) {
     push(ref(db, 'chat_messages'), { sender: gonderici, text: sonMetin, timestamp: Date.now() });
 }
 
-// 30 DK'DAN ESKİLERİ SİL
-function eskiMesajlariTemizle() {
+// --- FİREBASE OTO-TEMİZLİK FONKSİYONLARI ---
+function veritabaniniTemizle() {
+    // 1. CHAT TEMİZLİĞİ (30 Dk'dan eskiler)
     const otuzDkOncesi = Date.now() - (30 * 60 * 1000);
-    const eskiMesajlarSorgusu = query(ref(db, 'chat_messages'), orderByChild('timestamp'), endAt(otuzDkOncesi));
-    
-    get(eskiMesajlarSorgusu).then((snapshot) => {
+    get(query(ref(db, 'chat_messages'), orderByChild('timestamp'), endAt(otuzDkOncesi))).then((snapshot) => {
+        if (snapshot.exists()) snapshot.forEach(child => remove(ref(db, `chat_messages/${child.key}`)));
+    });
+
+    // 2. FOTOĞRAF TEMİZLİĞİ (Sadece son 30 kalsın, gerisini kalıcı sil)
+    get(query(ref(db, 'kamera_verileri/fotograflar'), orderByChild('zaman_damgasi'))).then((snapshot) => {
         if (snapshot.exists()) {
-            snapshot.forEach(child => remove(ref(db, `chat_messages/${child.key}`)));
+            const toplamFoto = snapshot.size;
+            if (toplamFoto > 30) {
+                const silinecekMiktar = toplamFoto - 30;
+                let sayac = 0;
+                snapshot.forEach(child => {
+                    if (sayac < silinecekMiktar) {
+                        remove(ref(db, `kamera_verileri/fotograflar/${child.key}`));
+                        sayac++;
+                    }
+                });
+                console.log(`${silinecekMiktar} adet eski fotoğraf veritabanından kalıcı olarak silindi.`);
+            }
         }
     });
 }
-eskiMesajlariTemizle();
-setInterval(eskiMesajlariTemizle, 60000);
+
+// Temizliği başlat ve dakikada bir tekrarla
+veritabaniniTemizle();
+setInterval(veritabaniniTemizle, 60000);
