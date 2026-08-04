@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Akıllı Güvenlik Paneli</title>
+    <title>EsGumus</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -20,7 +20,7 @@
     <div id="dashboard-container" style="display: none;">
         <div class="main-layout">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin: 0;">Kontrol Paneli</h2>
+                <h2 style="margin: 0;">Kontrol Paneli <span style="font-size:10px; color:#4caf50;">by @esofiso • Aug 2026</span></h3>
                 <button id="logout-btn" style="width: auto; padding: 8px 15px;">Çıkış</button>
             </div>
 
@@ -72,7 +72,7 @@
 
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <label for="hassasiyet-slider" style="font-size: 13px;">Hassasiyet:</label>
-                            <input type="range" id="hassasiyet-slider" aria-label="Hareket Hassasiyeti" min="5" max="50" value="15" style="width: 80px;">
+                            <input type="range" id="hassasiyet-slider" aria-label="Hareket Hassasiyeti" min="1" max="90" value="15" style="width: 80px;">
                             <span id="hassasiyet-deger" style="font-size: 13px;">%15</span>
                         </div>
 
@@ -92,7 +92,7 @@
                 </div>
                 <!-- CİHAZ AYARLARI BİTİŞ -->
 
-                <button id="capture-btn">📸 Manuel Fotoğraf Çek</button>
+                <button id="capture-btn"> Anlık Fotoğraf Çek</button>
                 
                 <div id="image-gallery">
                     <h3 id="foto-durum" style="color: #aaa;">Görüntü Bekleniyor...</h3>
@@ -108,7 +108,7 @@
 
             <!-- CHAT PANELİ -->
             <div id="chat-section" class="container" style="display: none;">
-                <h3 style="margin-top: 0;">Olay Günlüğü <span style="font-size:10px; color:#4caf50;">🔒 E2EE Şifreli</span></h3>
+                <h3 style="margin-top: 0;">Sohbet <span style="font-size:10px; color:#4caf50;">uçtan-uca şifreli</span></h3>
                 <div id="chat-box" class="chat-box"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chat-input" placeholder="Mesaj yaz..." aria-label="Mesaj Kutusu">
