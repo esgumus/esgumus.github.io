@@ -45,6 +45,7 @@ const tabChatBtn = document.getElementById('tab-chat-btn');
 const cameraSection = document.getElementById('camera-section');
 const chatSection = document.getElementById('chat-section');
 
+// Form Elementleri
 const kameraYonuSelect = document.getElementById('kamera-yonu-select');
 const otoCekimSelect = document.getElementById('oto-cekim-select');
 const hareketAktifSelect = document.getElementById('hareket-aktif-select');
@@ -81,8 +82,13 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// TELEFONA AYARLARI GÖNDER
-function ayarlariGuncelle() {
+// Sadece görselliği günceller, veritabanına YAZMAZ
+hassasiyetSlider.addEventListener('input', (e) => {
+    hassasiyetDeger.innerText = `%${e.target.value}`;
+});
+
+// YENİ: AYARLARI "DEĞİŞTİR" BUTONUYLA GÖNDER
+document.getElementById('ayarlari-degistir-btn').addEventListener('click', () => {
     const saniye = parseInt(otoCekimSelect.value);
     
     set(ref(db, 'kamera_komutlari/ayarlar'), {
@@ -92,15 +98,8 @@ function ayarlariGuncelle() {
         hareket_aktif: hareketAktifSelect.value === 'true'
     });
 
-    if (saniye === 0) gonderMesaj("Sistem", "Otomatik takip kapatıldı.", false);
-    else gonderMesaj("Sistem", `Otomatik takip aktif. Telefon zamanlayıcıyı kurdu.`, false);
-}
-
-kameraYonuSelect.addEventListener('change', ayarlariGuncelle);
-otoCekimSelect.addEventListener('change', ayarlariGuncelle);
-hareketAktifSelect.addEventListener('change', ayarlariGuncelle);
-hassasiyetSlider.addEventListener('input', (e) => hassasiyetDeger.innerText = `%${e.target.value}`);
-hassasiyetSlider.addEventListener('change', ayarlariGuncelle);
+    gonderMesaj("Sistem", "Ayarlar güncellendi.", false);
+});
 
 // MANUEL TETİKLEME
 document.getElementById('capture-btn').addEventListener('click', () => {
@@ -109,6 +108,36 @@ document.getElementById('capture-btn').addEventListener('click', () => {
 });
 
 function baslatDinleyiciler() {
+    
+    // YENİ: CİHAZ AYARLARININ CANLI DİNLEYİCİSİ (Şu Anki Ayarlar Panosunu Günceller)
+    onValue(ref(db, 'kamera_komutlari/ayarlar'), (snapshot) => {
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            
+            // Sağ Taraftaki "Şu Anki Ayarlar" Kısmını Güncelle
+            document.getElementById('guncel-kamera').innerText = data.arka_kamera_mi ? "Arka Kamera" : "Ön Kamera";
+            document.getElementById('guncel-uyari').innerText = data.hareket_aktif ? "Açık (Mail Atar)" : "Kapalı (Sadece Çeker)";
+            document.getElementById('guncel-hassasiyet').innerText = `%${data.hassasiyet}`;
+            
+            let modMetin = "Sadece Web'den";
+            if (data.oto_cekim_saniye > 0) {
+                if (data.oto_cekim_saniye >= 60) {
+                    modMetin = `${data.oto_cekim_saniye / 60} Dakikada Bir`;
+                } else {
+                    modMetin = `${data.oto_cekim_saniye} Saniyede Bir`;
+                }
+            }
+            document.getElementById('guncel-mod').innerText = modMetin;
+
+            // Diğer cihazlarda menüler farklı kalmasın diye sol taraftaki seçicileri de güncel veriye eşitle
+            kameraYonuSelect.value = data.arka_kamera_mi ? 'arka' : 'on';
+            hareketAktifSelect.value = data.hareket_aktif ? 'true' : 'false';
+            otoCekimSelect.value = data.oto_cekim_saniye.toString();
+            hassasiyetSlider.value = data.hassasiyet;
+            hassasiyetDeger.innerText = `%${data.hassasiyet}`;
+        }
+    });
+
     // Fotoğrafları Dinle
     const fotoRef = query(ref(db, 'kamera_verileri/fotograflar'), limitToLast(30));
     onValue(fotoRef, (snapshot) => {
@@ -162,15 +191,13 @@ function gonderMesaj(gonderici, metin, sifrelensinMi = true) {
     push(ref(db, 'chat_messages'), { sender: gonderici, text: sonMetin, timestamp: Date.now() });
 }
 
-// --- FİREBASE OTO-TEMİZLİK FONKSİYONLARI ---
+// --- FİREBASE OTO-TEMİZLİK ---
 function veritabaniniTemizle() {
-    // 1. CHAT TEMİZLİĞİ (30 Dk'dan eskiler)
     const otuzDkOncesi = Date.now() - (30 * 60 * 1000);
     get(query(ref(db, 'chat_messages'), orderByChild('timestamp'), endAt(otuzDkOncesi))).then((snapshot) => {
         if (snapshot.exists()) snapshot.forEach(child => remove(ref(db, `chat_messages/${child.key}`)));
     });
 
-    // 2. FOTOĞRAF TEMİZLİĞİ (Sadece son 30 kalsın, gerisini kalıcı sil)
     get(query(ref(db, 'kamera_verileri/fotograflar'), orderByChild('zaman_damgasi'))).then((snapshot) => {
         if (snapshot.exists()) {
             const toplamFoto = snapshot.size;
@@ -183,12 +210,10 @@ function veritabaniniTemizle() {
                         sayac++;
                     }
                 });
-                console.log(`${silinecekMiktar} adet eski fotoğraf veritabanından kalıcı olarak silindi.`);
             }
         }
     });
 }
 
-// Temizliği başlat ve dakikada bir tekrarla
 veritabaniniTemizle();
 setInterval(veritabaniniTemizle, 60000);
